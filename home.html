@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TTC Arrivals – Bathurst at Alcina</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      text-align: center;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #d32f2f;
+    }
+
+    h2 {
+      color: #555;
+    }
+
+    .arrivals {
+      margin-top: 30px;
+    }
+
+    .arrival {
+      font-size: 1.8rem;
+      margin: 15px 0;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>TTC Arrivals</h1>
+  <h2>Southbound on Bathurst at Alcina</h2>
+
+  <div class="arrivals" id="arrivals">
+    Loading arrival times...
+  </div>
+
+  <script>
+    async function fetchArrivals() {
+      const proxyUrl = 'https://corsproxy.io/?';
+      const ttcUrl = 'https://myttc.ca/southbound_on_bathurst_at_alcina.json';
+      const url = proxyUrl + encodeURIComponent(ttcUrl);
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const container = document.getElementById('arrivals');
+        container.innerHTML = ''; // Clear previous entries
+
+        const arrivals = data.stop.routes.flatMap(route =>
+          route.arrivals.map(time => ({
+            route: route.name,
+            time: time
+          }))
+        );
+
+        if (arrivals.length === 0) {
+          container.innerHTML = '<p>No upcoming arrivals at this time.</p>';
+          return;
+        }
+
+        arrivals.slice(0, 5).forEach(arrival => {
+          const div = document.createElement('div');
+          div.className = 'arrival';
+          div.textContent = `${arrival.route}: ${arrival.time}`;
+          container.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error('Fetch error:', err);
+        document.getElementById('arrivals').innerHTML = '<p class="error">Error loading data.</p>';
+      }
+    }
+
+    fetchArrivals();
+    setInterval(fetchArrivals, 60000); // Refresh every 60 seconds
+  </script>
+</body>
+</html>
