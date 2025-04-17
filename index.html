@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bathurst @ Alcina - TTC Live Arrivals</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      color: #d32f2f;
+    }
+    .arrival {
+      font-size: 1.6rem;
+      margin: 1rem 0;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Next TTC Arrivals</h1>
+  <h2>Bathurst @ Alcina (Southbound)</h2>
+  <div id="arrivals">Loading predictions...</div>
+
+  <script>
+    async function fetchTTCData() {
+      const url = "https://retro.umoiq.com/service/publicXMLFeed?command=predictions&a=ttc&r=7&s=7306";
+
+      try {
+        const response = await fetch(url);
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+
+        const predictions = xmlDoc.getElementsByTagName("prediction");
+        const container = document.getElementById("arrivals");
+        container.innerHTML = "";
+
+        if (predictions.length === 0) {
+          container.innerHTML = "<p>No upcoming vehicles.</p>";
+          return;
+        }
+
+        for (let i = 0; i < Math.min(5, predictions.length); i++) {
+          const mins = predictions[i].getAttribute("minutes");
+          const vehicle = predictions[i].getAttribute("vehicle");
+          const arrival = document.createElement("div");
+          arrival.className = "arrival";
+          arrival.textContent = `Bus ${vehicle} arriving in ${mins} min`;
+          container.appendChild(arrival);
+        }
+
+      } catch (err) {
+        console.error("Fetch error:", err);
+        document.getElementById("arrivals").innerHTML = '<p class="error">Error loading TTC data.</p>';
+      }
+    }
+
+    fetchTTCData();
+    setInterval(fetchTTCData, 60000); // auto-refresh every 60 seconds
+  </script>
+</body>
+</html>
